@@ -1,59 +1,44 @@
-# Perlyna
+# «Перлина» — лендинг стоматологічної клініки (Київ)
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.2.
+Angular 22 (standalone, signals, Signal Forms, `@defer` + incremental hydration) · SSR + prerender · Tailwind CSS 4 · GSAP + ScrollTrigger · Lenis · Three.js
 
-## Development server
+Портфоліо-проєкт. Увесь контент — українською. Результати аудиту — у [AUDIT.md](AUDIT.md).
 
-To start a local development server, run:
-
-```bash
-ng serve
-```
-
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
-
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
+## Запуск
 
 ```bash
-ng generate component component-name
+npm install
+npm start                      # dev-сервер: http://localhost:4200
+npm run build                  # production-збірка + пререндер / та /polityka-konfidentsiinosti
+npm run serve:ssr:perlyna      # SSR-сервер з dist: http://localhost:4000
 ```
 
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
+## Деплой на GitHub Pages
 
-```bash
-ng generate --help
+Workflow — `.github/workflows/deploy-pages.yml` (пуш у `main`). Один раз: **Settings → Pages → Source: GitHub Actions**
+(на безкоштовному плані репозиторій має бути публічним). Збірка йде з `--base-href /<repo>/`, тому всі посилання та шрифти — відносні.
+
+## Структура
+
+```
+src/app/
+  core/        seo.service (title, meta, canonical, OG, JSON-LD), smooth-scroll.service (Lenis+GSAP),
+               booking.service (модалка й фейкова відправка в localStorage), gsap (ледаче завантаження),
+               image-loader (Unsplash CDN для NgOptimizedImage), phone (маска +380)
+  data/        content.ts — усі тексти, ціни, лікарі, кейси, відгуки, FAQ
+  shared/
+    directives in-view (один IntersectionObserver), words (заголовки по словах), ripple, glow (світна межа)
+    ui/        icon, logo, section-head, glow-number, booking-form (Signal Forms)
+  sections/    header, hero (+ tooth-scene на Three.js), fears, services, pricing, technologies,
+               doctors, cases, installment, reviews, faq, booking-section, footer, mobile-cta, booking-dialog
+  pages/       home, privacy, not-found
+public/        шрифти (субсет woff2), tooth.webp (постер 3D-сцени), OG-картинка, іконки, robots.txt, sitemap.xml
 ```
 
-## Building
+## Ключові рішення
 
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+- **SSR-безпека:** усе, що чіпає `window`/GSAP/Three.js/Lenis — в `afterNextRender`, обробниках подій або під `isPlatformBrowser`.
+- **3D без шкоди для LCP:** на першому екрані — постер-кадр тієї ж сцени; Three.js вантажиться в простої (десктоп) або коли сцена видима (мобільні), при `prefers-reduced-motion` — не вантажиться взагалі.
+- **Incremental hydration:** секції нижче hero — `@defer (hydrate on viewport)`; HTML з сервера повний, JS «оживляє» секцію при наближенні.
+- **Шрифти:** Unbounded (600) + Onest (400–600), субсет під символи сайту — 37 КБ; `font-display: optional` + метрично підігнані fallback-и → CLS 0.
+- **Форма:** фейкова — імітує відправку й зберігає заявку в `localStorage` (`perlyna:leads`).

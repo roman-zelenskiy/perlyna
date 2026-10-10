@@ -1,11 +1,35 @@
 <!doctype html>
-<html lang="en">
+<html lang="uk">
 <head>
   <meta charset="utf-8">
-  <title>Perlyna</title>
+  <title>Стоматологія в Києві без болю — «Перлина»</title>
   <base href="/">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="preload" href="fonts/unbounded.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="fonts/onest.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preconnect" href="https://images.unsplash.com">
+  <style>
+    @font-face {
+      font-family: 'Unbounded';
+      src: url('fonts/unbounded.woff2') format('woff2');
+      font-weight: 600;
+      font-display: optional;
+    }
+    @font-face {
+      font-family: 'Onest';
+      src: url('fonts/onest.woff2') format('woff2');
+      font-weight: 400 600;
+      font-display: optional;
+    }
+  </style>
+  <!-- Анімації появи вмикаються лише з JS і без prefers-reduced-motion: без цього контент видно одразу -->
+  <script>
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) document.documentElement.classList.add('motion');
+  </script>
 </head>
 <body>
   <app-root></app-root>
