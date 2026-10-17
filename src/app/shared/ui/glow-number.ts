@@ -1,4 +1,5 @@
-import { Component, computed, input } from '@angular/core';
+import { Component, computed, inject, input } from '@angular/core';
+import { I18n } from '../../core/i18n';
 import { InView } from '../directives/in-view';
 
 /** Число, що проявляється з розмиття з м’яким бірюзовим світінням (без «накручування») */
@@ -11,5 +12,6 @@ import { InView } from '../directives/in-view';
 export class GlowNumber {
   readonly value = input.required<number>();
   readonly suffix = input('');
-  protected readonly formatted = computed(() => this.value().toLocaleString('uk-UA').replace(/\s/g, '\u00a0'));
+  private readonly locale = inject(I18n).t.locale;
+  protected readonly formatted = computed(() => this.value().toLocaleString(this.locale).replace(/\s/g, '\u00a0'));
 }

@@ -1,6 +1,6 @@
 import { Component, DestroyRef, ElementRef, afterNextRender, inject, viewChildren } from '@angular/core';
+import { I18n } from '../core/i18n';
 import { NgOptimizedImage } from '@angular/common';
-import { services } from '../data/content';
 import { Booking } from '../core/booking.service';
 import { loadGsap } from '../core/gsap';
 import { prefersReducedMotion } from '../core/browser';
@@ -9,14 +9,8 @@ import { Icon } from '../shared/ui/icon';
 import { InView } from '../shared/directives/in-view';
 import { Ripple } from '../shared/directives/ripple';
 
-const bookingName: Record<string, string> = {
-  therapy: 'Лікування зубів',
-  implants: 'Імплантація',
-  ortho: 'Елайнери / брекети',
-  aesthetic: 'Вініри',
-  hygiene: 'Професійна гігієна',
-  kids: 'Дитяча стоматологія',
-};
+/** Послуга у формі запису — індекс у bookingServices поточної мови */
+const bookingIndex: Record<string, number> = { therapy: 1, implants: 2, ortho: 3, aesthetic: 4, hygiene: 6, kids: 7 };
 
 /** «Липкі» картки послуг, що наїжджають стопкою */
 @Component({
@@ -24,14 +18,14 @@ const bookingName: Record<string, string> = {
   imports: [NgOptimizedImage, SectionHead, Icon, InView, Ripple],
   template: `
     <section id="services" aria-labelledby="services-title" class="relative bg-mist py-24 md:py-36">
-      <div class="wrap grid gap-12 lg:grid-cols-12">
+      <div class="wrap grid grid-cols-1 gap-12 lg:grid-cols-12">
         <div class="lg:col-span-4">
           <div class="lg:sticky lg:top-32">
             <app-section-head
-              eyebrow="Послуги"
+              [eyebrow]="ui.services.eyebrow"
               headingId="services-title"
-              title="Від пломби до *нової* усмішки"
-              lead="Шість напрямів під одним дахом — від лікування карієсу до імплантації зубів і вінірів. Ціни вказані «від» і фіксуються в плані лікування."
+              [title]="ui.services.title"
+              [lead]="ui.services.lead"
             />
           </div>
         </div>
@@ -43,7 +37,7 @@ const bookingName: Record<string, string> = {
                 <div class="flex flex-col p-7 md:p-10">
                   <div class="flex items-center justify-between gap-4">
                     <span class="text-sm font-semibold text-slate">0{{ i + 1 }} / 0{{ items.length }}</span>
-                    <span class="pill">від {{ price(s.price) }} грн</span>
+                    <span class="pill">{{ ui.from(price(s.price)) }}</span>
                   </div>
                   <h3 class="title-md mt-6">{{ s.title }}</h3>
                   <p class="mt-3 text-slate">{{ s.lead }}</p>
@@ -53,7 +47,7 @@ const bookingName: Record<string, string> = {
                     }
                   </ul>
                   <button type="button" class="btn btn-ghost glint mt-8 self-start" appRipple (click)="booking.show(serviceName(s.id))">
-                    Записатися <app-icon name="arrow" [size]="18" />
+                    {{ ui.services.book }} <app-icon name="arrow" [size]="18" />
                   </button>
                 </div>
                 <div class="scan relative min-h-60 md:min-h-full" [appInView]="150" style="--scan-bg: #f1f7f6">
@@ -68,16 +62,18 @@ const bookingName: Record<string, string> = {
   `,
 })
 export class Services {
-  protected readonly items = services;
+  protected readonly i18n = inject(I18n);
+  protected readonly ui = this.i18n.t;
+  protected readonly items = this.i18n.c.services;
   protected readonly booking = inject(Booking);
   private readonly cards = viewChildren<ElementRef<HTMLElement>>('card');
 
   protected price(v: number): string {
-    return v.toLocaleString('uk-UA').replace(/\s/g, '\u00a0');
+    return v.toLocaleString(this.ui.locale).replace(/\s/g, '\u00a0');
   }
 
   protected serviceName(id: string): string {
-    return bookingName[id] ?? 'Безкоштовна консультація';
+    return this.i18n.c.bookingServices[bookingIndex[id] ?? 0];
   }
 
   constructor() {

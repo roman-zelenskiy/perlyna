@@ -1,5 +1,5 @@
 import { Component, DestroyRef, ElementRef, afterNextRender, inject, signal, viewChild, viewChildren } from '@angular/core';
-import { fears } from '../data/content';
+import { I18n } from '../core/i18n';
 import { prefersReducedMotion } from '../core/browser';
 import { SectionHead } from '../shared/ui/section-head';
 import { Icon } from '../shared/ui/icon';
@@ -17,10 +17,10 @@ import { Glow } from '../shared/directives/glow';
     <section id="fears" aria-labelledby="fears-title" class="relative py-24 md:py-36">
       <div class="wrap">
         <app-section-head
-          eyebrow="Чого бояться пацієнти"
+          [eyebrow]="ui.fears.eyebrow"
           headingId="fears-title"
-          title="Три страхи, які ми *прибрали* зі стоматології"
-          lead="Ми чесно запитали пацієнтів, чому вони роками відкладають візит до стоматолога. І збудували клініку так, щоб жодна з цих причин не мала сенсу."
+          [title]="ui.fears.title"
+          [lead]="ui.fears.lead"
         />
 
         <div #track class="mt-16 grid gap-10 md:mt-24 lg:grid-cols-2 lg:gap-16">
@@ -31,11 +31,11 @@ import { Glow } from '../shared/directives/glow';
                 <div class="pointer-events-none absolute -top-24 -right-24 h-72 w-72 rounded-full bg-[#e86a5c]/25 blur-3xl transition-opacity duration-700" [style.opacity]="1 - calm()"></div>
                 <div class="pointer-events-none absolute -bottom-24 -left-24 h-72 w-72 rounded-full bg-aqua/30 blur-3xl transition-opacity duration-700" [style.opacity]="calm()"></div>
 
-                <p class="text-sm font-semibold text-white/70">Страх {{ active() + 1 }} з {{ items.length }}</p>
+                <p class="text-sm font-semibold text-white/70">{{ ui.fears.of(active() + 1, items.length) }}</p>
                 @for (f of items; track f.id; let i = $index) {
                   @if (i === active()) {
                     <div class="fear-swap">
-                      <p class="title-md mt-4 text-white">«{{ f.fear }}»</p>
+                      <p class="title-md mt-4 text-white">{{ ui.q(f.fear) }}</p>
                       <p #fearText class="mt-4 max-w-md text-white/80">{{ f.fearText }}</p>
                     </div>
                   }
@@ -52,7 +52,7 @@ import { Glow } from '../shared/directives/glow';
                 </div>
 
                 <div class="mt-6">
-                  <div class="flex justify-between text-sm text-white/75"><span>Рівень тривоги</span><span>{{ anxietyLabel() }}</span></div>
+                  <div class="flex justify-between text-sm text-white/75"><span>{{ ui.fears.anxiety }}</span><span>{{ anxietyLabel() }}</span></div>
                   <div class="mt-2 h-1.5 overflow-hidden rounded-full bg-white/10">
                     <div #meter class="h-full w-full origin-left rounded-full bg-gradient-to-r from-aqua to-glow"></div>
                   </div>
@@ -66,12 +66,12 @@ import { Glow } from '../shared/directives/glow';
             @for (f of items; track f.id; let i = $index) {
               <li #solution class="solution flex flex-col justify-center lg:min-h-[72vh]" [attr.data-index]="i">
                 <div class="rounded-[2rem] border border-frost bg-mist/60 p-6 lg:hidden">
-                  <p class="text-sm font-semibold text-slate">Страх {{ i + 1 }}</p>
-                  <p class="title-md mt-2">«{{ f.fear }}»</p>
+                  <p class="text-sm font-semibold text-slate">{{ ui.fears.n(i + 1) }}</p>
+                  <p class="title-md mt-2">{{ ui.q(f.fear) }}</p>
                   <p class="mt-2 text-slate">{{ f.fearText }}</p>
                 </div>
                 <div class="mt-4 lg:mt-0" data-reveal appInView>
-                  <p class="pill"><app-icon name="check" [size]="16" />Рішення</p>
+                  <p class="pill"><app-icon name="check" [size]="16" />{{ ui.fears.solution }}</p>
                   <h3 class="title-md mt-5">{{ f.solutionTitle }}</h3>
                   <p class="mt-4 max-w-xl text-lg text-slate">{{ f.solution }}</p>
                   <ul class="mt-7 grid gap-3">
@@ -98,7 +98,8 @@ import { Glow } from '../shared/directives/glow';
   `,
 })
 export class Fears {
-  protected readonly items = fears;
+  protected readonly ui = inject(I18n).t;
+  protected readonly items = inject(I18n).c.fears;
   protected readonly active = signal(0);
   protected readonly calm = signal(0);
   protected readonly ecg = this.buildEcg();
@@ -111,7 +112,7 @@ export class Fears {
 
   protected anxietyLabel(): string {
     const c = this.calm();
-    return c < 0.35 ? 'висока' : c < 0.7 ? 'знижується' : 'спокій';
+    return c < 0.35 ? this.ui.fears.high : c < 0.7 ? this.ui.fears.lower : this.ui.fears.calm;
   }
 
   constructor() {

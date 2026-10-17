@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://perlyna.clinic/</loc><lastmod>2026-10-10</lastmod><changefreq>monthly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://perlyna.clinic/polityka-konfidentsiinosti</loc><lastmod>2026-09-01</lastmod><changefreq>yearly</changefreq><priority>0.2</priority></url>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url><loc>https://perlyna.clinic/uk/</loc><lastmod>2026-10-17</lastmod><changefreq>monthly</changefreq><priority>1.0</priority>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://perlyna.clinic/uk/"/><xhtml:link rel="alternate" hreflang="en" href="https://perlyna.clinic/en/"/><xhtml:link rel="alternate" hreflang="x-default" href="https://perlyna.clinic/uk/"/></url>
+  <url><loc>https://perlyna.clinic/en/</loc><lastmod>2026-10-17</lastmod><changefreq>monthly</changefreq><priority>0.9</priority>
+    <xhtml:link rel="alternate" hreflang="uk" href="https://perlyna.clinic/uk/"/><xhtml:link rel="alternate" hreflang="en" href="https://perlyna.clinic/en/"/><xhtml:link rel="alternate" hreflang="x-default" href="https://perlyna.clinic/uk/"/></url>
+  <url><loc>https://perlyna.clinic/uk/polityka-konfidentsiinosti</loc><lastmod>2026-09-01</lastmod><changefreq>yearly</changefreq><priority>0.2</priority></url>
+  <url><loc>https://perlyna.clinic/en/polityka-konfidentsiinosti</loc><lastmod>2026-09-01</lastmod><changefreq>yearly</changefreq><priority>0.2</priority></url>
 </urlset>

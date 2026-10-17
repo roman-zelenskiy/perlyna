@@ -477,3 +477,18 @@ html.lenis body {
     filter: blur(0) drop-shadow(0 0 0 rgb(20 184 166 / 0));
   }
 }
+
+/* Курсор: Tailwind preflight скидає pointer на кнопках — повертаємо для всього клікабельного */
+@layer base {
+  a[href], button, [role='button'], [role='tab'], [role='option'], [role='radio'], [role='combobox'], summary, label[for], select,
+  input[type='range'], input[type='radio'], input[type='checkbox'], input[type='date']::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+  }
+  :disabled, [aria-disabled='true'] { cursor: not-allowed; }
+}
+
+/* Тонкі бірюзові скролбари — у списках, меню й діалогах */
+* { scrollbar-width: thin; scrollbar-color: rgb(20 184 166 / 0.45) transparent; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-thumb { background: rgb(20 184 166 / 0.45); border-radius: 999px; }
+::-webkit-scrollbar-track { background: transparent; }

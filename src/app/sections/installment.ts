@@ -1,6 +1,6 @@
 import { Component, DestroyRef, PLATFORM_ID, computed, effect, inject, signal, untracked } from '@angular/core';
+import { I18n } from '../core/i18n';
 import { isPlatformBrowser } from '@angular/common';
-import { installment } from '../data/content';
 import { Booking } from '../core/booking.service';
 import { prefersReducedMotion } from '../core/browser';
 import { SectionHead } from '../shared/ui/section-head';
@@ -8,7 +8,7 @@ import { Icon } from '../shared/ui/icon';
 import { Ripple } from '../shared/directives/ripple';
 import { InView } from '../shared/directives/in-view';
 
-const fmt = (n: number) => Math.round(n).toLocaleString('uk-UA').replace(/\s/g, '\u00a0');
+const fmtIn = (locale: string) => (n: number) => Math.round(n).toLocaleString(locale).replace(/\s/g, '\u00a0');
 
 /** Калькулятор розстрочки: сума + термін → щомісячний платіж з плавним перерахунком */
 @Component({
@@ -16,28 +16,28 @@ const fmt = (n: number) => Math.round(n).toLocaleString('uk-UA').replace(/\s/g, 
   imports: [SectionHead, Icon, Ripple, InView],
   template: `
     <section id="installment" aria-labelledby="installment-title" class="relative py-24 md:py-36">
-      <div class="wrap grid gap-10 lg:grid-cols-12 lg:gap-12">
+      <div class="wrap grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12">
         <div class="lg:col-span-5">
           <app-section-head
-            eyebrow="Розстрочка та страхування"
+            [eyebrow]="ui.inst.eyebrow"
             headingId="installment-title"
-            title="Лікуйте зараз, платіть *частинами*"
-            lead="Не відкладайте лікування через бюджет. Розстрочка 0% до 10 місяців від банків-партнерів оформлюється за 5 хвилин прямо в клініці."
+            [title]="ui.inst.title"
+            [lead]="ui.inst.lead"
           />
           <div class="mt-10 rounded-[2rem] border border-frost bg-mist p-7" data-reveal appInView="200">
             <div class="flex items-center gap-3">
               <span class="grid h-11 w-11 place-items-center rounded-full bg-white text-teal"><app-icon name="shield" /></span>
-              <h3 class="font-display text-lg font-semibold tracking-tight">Працюємо з ДМС</h3>
+              <h3 class="font-display text-lg font-semibold tracking-tight">{{ ui.inst.insurance }}</h3>
             </div>
-            <p class="mt-4 text-slate">Співпрацюємо з більшістю страхових компаній, що мають стоматологічні програми. Адміністратор перевірить поліс до візиту й погодить лікування зі страховою — вам не потрібно нічого оплачувати наперед.</p>
+            <p class="mt-4 text-slate">{{ ui.inst.insuranceText }}</p>
           </div>
         </div>
 
         <div class="lg:col-span-7" data-reveal appInView="100">
           <div class="calc relative overflow-hidden rounded-[2.5rem] border border-frost bg-white p-7 shadow-[var(--shadow-soft)] md:p-10">
             <div class="flex flex-wrap items-end justify-between gap-4">
-              <label for="amount" class="font-semibold">Вартість лікування</label>
-              <p class="font-display text-3xl font-semibold tracking-tight md:text-4xl">{{ fmtAmount() }} <span class="text-lg text-slate">грн</span></p>
+              <label for="amount" class="font-semibold">{{ ui.inst.cost }}</label>
+              <p class="font-display text-3xl font-semibold tracking-tight md:text-4xl">{{ fmtAmount() }} <span class="text-lg text-slate">{{ ui.cur }}</span></p>
             </div>
             <input
               id="amount"
@@ -49,18 +49,18 @@ const fmt = (n: number) => Math.round(n).toLocaleString('uk-UA').replace(/\s/g, 
               [value]="amount()"
               (input)="setAmount($event)"
               [style.--fill]="fill()"
-              [attr.aria-valuetext]="fmtAmount() + ' гривень'"
+              [attr.aria-valuetext]="fmtAmount() + ' ' + ui.inst.hryvnias"
             />
-            <div class="mt-2 flex justify-between text-sm text-slate" aria-hidden="true"><span>10 тис.</span><span>200 тис.</span></div>
+            <div class="mt-2 flex justify-between text-sm text-slate" aria-hidden="true"><span>{{ ui.inst.min }}</span><span>{{ ui.inst.max }}</span></div>
 
             <fieldset class="mt-9">
-              <legend class="font-semibold">Термін</legend>
+              <legend class="font-semibold">{{ ui.inst.term }}</legend>
               <div class="mt-4 grid grid-cols-5 gap-2">
                 @for (t of cfg.terms; track t) {
                   <label class="term" [class.on]="term() === t">
                     <input type="radio" name="term" class="sr-only" [value]="t" [checked]="term() === t" (change)="term.set(t)" />
                     <span class="font-display text-lg font-semibold">{{ t }}</span>
-                    <span class="text-xs">міс.</span>
+                    <span class="text-xs">{{ ui.inst.mo }}</span>
                   </label>
                 }
               </div>
@@ -68,17 +68,17 @@ const fmt = (n: number) => Math.round(n).toLocaleString('uk-UA').replace(/\s/g, 
 
             <div class="result mt-9 grid gap-6 rounded-[1.75rem] bg-ink p-7 text-white sm:grid-cols-[1fr_auto] sm:items-end">
               <div>
-                <p class="text-sm text-white/75">Щомісячний платіж</p>
+                <p class="text-sm text-white/75">{{ ui.inst.monthly }}</p>
                 <p class="mt-2 font-display text-[2.6rem] leading-none font-semibold tracking-tight md:text-5xl" aria-live="polite">
-                  <span class="monthly">{{ shown() }}</span> <span class="text-xl text-glow">грн/міс</span>
+                  <span class="monthly">{{ shown() }}</span> <span class="ml-1.5 text-xl text-glow">{{ ui.inst.perMo }}</span>
                 </p>
                 <p class="mt-3 text-sm text-white/75">
-                  @if (overpay() === 0) { Без переплат — 0% комісії } @else { Переплата за весь термін: {{ fmtOverpay() }} грн }
+                  @if (overpay() === 0) { {{ ui.inst.noFee }} } @else { {{ ui.inst.overpay(fmtOverpay()) }} }
                 </p>
               </div>
-              <button type="button" class="btn btn-primary glint" appRipple (click)="booking.show('Безкоштовна консультація')">Оформити на консультації</button>
+              <button type="button" class="btn btn-primary glint" appRipple (click)="booking.show(consult)">{{ ui.inst.cta }}</button>
             </div>
-            <p class="mt-4 text-xs text-slate">Розрахунок орієнтовний. Умови надають банки-партнери; потрібні паспорт та ІПН.</p>
+            <p class="mt-4 text-xs text-slate">{{ ui.inst.note }}</p>
           </div>
         </div>
       </div>
@@ -101,24 +101,28 @@ const fmt = (n: number) => Math.round(n).toLocaleString('uk-UA').replace(/\s/g, 
   `,
 })
 export class Installment {
-  protected readonly cfg = installment;
+  protected readonly i18n = inject(I18n);
+  protected readonly ui = this.i18n.t;
+  protected readonly cfg = this.i18n.c.installment;
+  protected readonly consult = this.i18n.c.bookingServices[0];
+  private readonly fmt = fmtIn(this.ui.locale);
   protected readonly booking = inject(Booking);
   protected readonly amount = signal(60000);
   protected readonly term = signal(10);
 
   protected readonly fill = computed(() => `${((this.amount() - this.cfg.min) / (this.cfg.max - this.cfg.min)) * 100}%`);
-  protected readonly fmtAmount = computed(() => fmt(this.amount()));
+  protected readonly fmtAmount = computed(() => this.fmt(this.amount()));
   protected readonly monthly = computed(() => {
     const t = this.term();
     const base = this.amount() / t;
     return t <= this.cfg.freeUpTo ? base : base + this.amount() * this.cfg.monthlyFee;
   });
   protected readonly overpay = computed(() => Math.round(this.monthly() * this.term() - this.amount()));
-  protected readonly fmtOverpay = computed(() => fmt(this.overpay()));
+  protected readonly fmtOverpay = computed(() => this.fmt(this.overpay()));
 
   /** Відображуване значення плавно «доїжджає» до нового платежу */
   private readonly display = signal(0);
-  protected readonly shown = computed(() => fmt(this.display() || this.monthly()));
+  protected readonly shown = computed(() => this.fmt(this.display() || this.monthly()));
 
   constructor() {
     const browser = isPlatformBrowser(inject(PLATFORM_ID));

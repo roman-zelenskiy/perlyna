@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { Seo } from '../core/seo.service';
+import { I18n } from '../core/i18n';
 import { Hero } from '../sections/hero/hero';
 import { Fears } from '../sections/fears';
 import { Services } from '../sections/services';
@@ -36,12 +37,7 @@ import { BookingSection } from '../sections/booking-section';
 export default class Home {
   constructor() {
     const seo = inject(Seo);
-    seo.set({
-      title: 'Стоматологія Київ без болю — імплантація, вініри | «Перлина»',
-      description:
-        'Стоматологія «Перлина» в Києві: лікування без болю, імплантація зубів, вініри та елайнери. Фіксований кошторис, гарантія до 10 років, консультація — 0 грн.',
-      path: '/',
-    });
+    seo.set({ ...inject(I18n).t.homeSeo, path: '/' });
     seo.setHomeSchema();
   }
 }

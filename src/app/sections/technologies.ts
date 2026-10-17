@@ -1,6 +1,6 @@
-import { Component, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
+import { I18n } from '../core/i18n';
 import { NgOptimizedImage } from '@angular/common';
-import { technologies } from '../data/content';
 import { SectionHead } from '../shared/ui/section-head';
 import { Icon } from '../shared/ui/icon';
 
@@ -19,14 +19,14 @@ import { Icon } from '../shared/ui/icon';
       <div class="wrap">
         <app-section-head
           [dark]="true"
-          eyebrow="Технології та обладнання"
+          [eyebrow]="ui.tech.eyebrow"
           headingId="tech-title"
-          title="Бачимо більше — *лікуємо* точніше"
-          lead="Цифрова діагностика замість здогадок. Ви бачите на екрані те саме, що й лікар, — і розумієте, за що платите."
+          [title]="ui.tech.title"
+          [lead]="ui.tech.lead"
         />
 
         <div class="mt-14 grid gap-8 lg:grid-cols-12 lg:gap-10">
-          <div role="tablist" aria-label="Технології" aria-orientation="vertical" class="grid gap-2 sm:grid-cols-2 lg:col-span-4 lg:grid-cols-1" (keydown)="onKey($event)">
+          <div role="tablist" [attr.aria-label]="ui.tech.tabs" aria-orientation="vertical" class="grid gap-2 sm:grid-cols-2 lg:col-span-4 lg:grid-cols-1" (keydown)="onKey($event)">
             @for (t of items; track t.id; let i = $index) {
               <button
                 type="button"
@@ -104,7 +104,8 @@ import { Icon } from '../shared/ui/icon';
   `,
 })
 export class Technologies {
-  protected readonly items = technologies;
+  protected readonly ui = inject(I18n).t;
+  protected readonly items = inject(I18n).c.technologies;
   protected readonly active = signal(0);
 
   protected onKey(e: KeyboardEvent): void {

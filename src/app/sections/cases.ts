@@ -1,6 +1,6 @@
 import { Component, DestroyRef, ElementRef, afterNextRender, computed, inject, signal } from '@angular/core';
+import { I18n } from '../core/i18n';
 import { NgOptimizedImage } from '@angular/common';
-import { cases } from '../data/content';
 import { InViewObserver } from '../shared/directives/in-view';
 import { SectionHead } from '../shared/ui/section-head';
 import { Icon } from '../shared/ui/icon';
@@ -14,16 +14,16 @@ import { Icon } from '../shared/ui/icon';
   imports: [NgOptimizedImage, SectionHead, Icon],
   template: `
     <section id="cases" aria-labelledby="cases-title" class="relative overflow-hidden bg-mist py-24 md:py-36">
-      <div class="wrap grid gap-12 lg:grid-cols-12 lg:items-center">
+      <div class="wrap grid grid-cols-1 gap-12 lg:grid-cols-12 lg:items-center">
         <div class="lg:col-span-5">
           <app-section-head
-            eyebrow="Кейси"
+            [eyebrow]="ui.cases.eyebrow"
             headingId="cases-title"
-            title="До та *після* — без фотошопу"
-            lead="Перемикайте стан і дивіться, як сканер «перемальовує» усмішку. Кожен результат ми спершу показали пацієнту на цифровій моделі."
+            [title]="ui.cases.title"
+            [lead]="ui.cases.lead"
           />
 
-          <div class="mt-10 grid gap-3" role="radiogroup" aria-label="Оберіть кейс">
+          <div class="mt-10 grid gap-3" role="radiogroup" [attr.aria-label]="ui.cases.pick">
             @for (c of items; track c.id; let i = $index) {
               <button
                 type="button"
@@ -46,21 +46,21 @@ import { Icon } from '../shared/ui/icon';
         <div class="lg:col-span-7">
           <div class="visual relative mx-auto aspect-[4/5] w-full max-w-[560px] overflow-hidden rounded-[2.5rem] bg-frost shadow-[var(--shadow-soft)]" [class.after]="after()">
             <!-- «до»: те саме фото, тьмяніше й тепліше -->
-            <img [ngSrc]="current().photo" [alt]="current().alt + ' — до лікування'" fill sizes="(min-width: 1024px) 40vw, 100vw" class="before-img object-cover" />
+            <img [ngSrc]="current().photo" [alt]="current().alt + ui.cases.beforeAlt" fill sizes="(min-width: 1024px) 40vw, 100vw" class="before-img object-cover" />
             <div class="after-outer absolute inset-0 overflow-hidden">
               <div class="after-inner absolute inset-0">
-                <img [ngSrc]="current().photo" [alt]="current().alt + ' — після лікування'" fill sizes="(min-width: 1024px) 40vw, 100vw" class="object-cover" />
+                <img [ngSrc]="current().photo" [alt]="current().alt + ui.cases.afterAlt" fill sizes="(min-width: 1024px) 40vw, 100vw" class="object-cover" />
               </div>
             </div>
             <div class="scan-edge absolute inset-0" aria-hidden="true"></div>
 
-            <div class="glass absolute top-4 left-1/2 flex -translate-x-1/2 rounded-full p-1" role="group" aria-label="Стан">
-              <button type="button" class="seg" [class.on]="!after()" [attr.aria-pressed]="!after()" (click)="after.set(false)">До</button>
-              <button type="button" class="seg" [class.on]="after()" [attr.aria-pressed]="after()" (click)="after.set(true)">Після</button>
+            <div class="glass absolute top-4 left-1/2 flex -translate-x-1/2 rounded-full p-1" role="group" [attr.aria-label]="ui.cases.state">
+              <button type="button" class="seg" [class.on]="!after()" [attr.aria-pressed]="!after()" (click)="after.set(false)">{{ ui.cases.before }}</button>
+              <button type="button" class="seg" [class.on]="after()" [attr.aria-pressed]="after()" (click)="after.set(true)">{{ ui.cases.after }}</button>
             </div>
             <p class="glass absolute right-4 bottom-4 left-4 flex items-center gap-3 rounded-2xl px-4 py-3 text-sm" aria-live="polite">
               <app-icon name="scan" class="text-teal" />
-              <span><strong>{{ after() ? 'Після' : 'До' }}:</strong> {{ current().title }} · {{ current().meta }}</span>
+              <span><strong>{{ after() ? ui.cases.after : ui.cases.before }}:</strong> {{ current().title }} · {{ current().meta }}</span>
             </p>
           </div>
         </div>
@@ -95,7 +95,8 @@ import { Icon } from '../shared/ui/icon';
   `,
 })
 export class Cases {
-  protected readonly items = cases;
+  protected readonly ui = inject(I18n).t;
+  protected readonly items = inject(I18n).c.cases;
   protected readonly active = signal(0);
   protected readonly after = signal(false);
   protected readonly current = computed(() => this.items[this.active()]);

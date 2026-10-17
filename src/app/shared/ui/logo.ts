@@ -1,4 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
+import { I18n } from '../../core/i18n';
 
 /** Логотип: перлина з бліком + назва */
 @Component({
@@ -17,7 +18,9 @@ import { Component } from '@angular/core';
       <circle cx="17" cy="17" r="15" fill="none" stroke="#0b7a70" stroke-opacity=".35" />
       <ellipse cx="12.5" cy="11.5" rx="4" ry="2.6" fill="#fff" opacity=".9" transform="rotate(-30 12.5 11.5)" />
     </svg>
-    <span class="font-display text-[1.2rem] font-semibold tracking-[-0.03em]">Перлина</span>
+    <span class="font-display text-[1.2rem] font-semibold tracking-[-0.03em]">{{ name }}</span>
   `,
 })
-export class Logo {}
+export class Logo {
+  protected readonly name = inject(I18n).c.clinic.name;
+}

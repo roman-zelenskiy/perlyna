@@ -1,5 +1,5 @@
 import { Component, ElementRef, afterRenderEffect, computed, inject, signal, viewChildren } from '@angular/core';
-import { priceTabs } from '../data/content';
+import { I18n } from '../core/i18n';
 import { Booking } from '../core/booking.service';
 import { SectionHead } from '../shared/ui/section-head';
 import { Icon } from '../shared/ui/icon';
@@ -17,22 +17,22 @@ import { Glow } from '../shared/directives/glow';
         <div class="grid gap-8 lg:grid-cols-12 lg:items-end">
           <app-section-head
             class="lg:col-span-7"
-            eyebrow="Прозорі ціни"
+            [eyebrow]="ui.pricing.eyebrow"
             headingId="prices-title"
-            title="Ціни без *дрібного* шрифту"
-            lead="Вартість основних процедур. Точну суму ви отримаєте в плані лікування після безкоштовної консультації — і вона не зміниться."
+            [title]="ui.pricing.title"
+            [lead]="ui.pricing.lead"
           />
           <div class="lg:col-span-5 lg:justify-self-end" data-reveal appInView="200">
             <div class="flex items-center gap-4 rounded-[1.75rem] border border-frost bg-mist p-5">
               <span class="breathe grid h-12 w-12 shrink-0 place-items-center rounded-full bg-white text-teal shadow-[var(--shadow-glow)]"><app-icon name="wallet" /></span>
-              <p class="text-[15px] text-slate"><strong class="text-ink">Розстрочка 0%</strong> до 10 місяців на будь-яке лікування від 10 000 грн</p>
+              <p class="text-[15px] text-slate"><strong class="text-ink">{{ ui.pricing.instA }}</strong> {{ ui.pricing.instB }}</p>
             </div>
           </div>
         </div>
 
         <div class="mt-14" data-reveal appInView>
           <div class="relative -mx-5 overflow-x-auto px-5 [scrollbar-width:none] md:mx-0 md:px-0">
-            <div role="tablist" aria-label="Категорії послуг" class="relative inline-flex min-w-max gap-1 rounded-full border border-frost bg-mist p-1.5" (keydown)="onKey($event)">
+            <div role="tablist" [attr.aria-label]="ui.pricing.cats" class="relative inline-flex min-w-max gap-1 rounded-full border border-frost bg-mist p-1.5" (keydown)="onKey($event)">
               <span class="indicator" aria-hidden="true" [style.transform]="indicator()"></span>
               @for (t of tabs; track t.id; let i = $index) {
                 <button
@@ -63,8 +63,8 @@ import { Glow } from '../shared/directives/glow';
               appGlow
             >
               <table class="w-full text-left">
-                <caption class="sr-only">Ціни: {{ t.label }}</caption>
-                <thead class="sr-only"><tr><th scope="col">Послуга</th><th scope="col">Ціна</th></tr></thead>
+                <caption class="sr-only">{{ ui.pricing.caption(t.label) }}</caption>
+                <thead class="sr-only"><tr><th scope="col">{{ ui.pricing.service }}</th><th scope="col">{{ ui.pricing.price }}</th></tr></thead>
                 <tbody>
                   @for (r of t.rows; track r.name) {
                     <tr class="row border-b border-frost last:border-0">
@@ -81,8 +81,8 @@ import { Glow } from '../shared/directives/glow';
           }
 
           <div class="mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <p class="text-sm text-slate">Ціни дійсні на жовтень 2026 року. Не є публічною офертою.</p>
-            <button type="button" class="btn btn-primary glint" appRipple (click)="booking.show('Безкоштовна консультація')">Отримати план лікування <app-icon name="arrow" [size]="18" /></button>
+            <p class="text-sm text-slate">{{ ui.pricing.valid }}</p>
+            <button type="button" class="btn btn-primary glint" appRipple (click)="booking.show(consult)">{{ ui.pricing.cta }} <app-icon name="arrow" [size]="18" /></button>
           </div>
         </div>
       </div>
@@ -105,7 +105,10 @@ import { Glow } from '../shared/directives/glow';
   `,
 })
 export class Pricing {
-  protected readonly tabs = priceTabs;
+  protected readonly i18n = inject(I18n);
+  protected readonly ui = this.i18n.t;
+  protected readonly tabs = this.i18n.c.priceTabs;
+  protected readonly consult = this.i18n.c.bookingServices[0];
   protected readonly booking = inject(Booking);
   protected readonly active = signal(0);
   private readonly tabEls = viewChildren<ElementRef<HTMLButtonElement>>('tab');

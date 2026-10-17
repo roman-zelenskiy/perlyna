@@ -1,6 +1,6 @@
 import { Component, DestroyRef, afterNextRender, computed, inject, signal } from '@angular/core';
+import { I18n } from '../core/i18n';
 import { NgOptimizedImage } from '@angular/common';
-import { clinic, reviews } from '../data/content';
 import { prefersReducedMotion } from '../core/browser';
 import { SectionHead } from '../shared/ui/section-head';
 import { Icon } from '../shared/ui/icon';
@@ -12,16 +12,16 @@ import { InView } from '../shared/directives/in-view';
   imports: [NgOptimizedImage, SectionHead, Icon, InView],
   template: `
     <section id="reviews" aria-labelledby="reviews-title" class="relative overflow-hidden bg-mist py-24 md:py-36">
-      <div class="wrap grid gap-8 lg:grid-cols-12 lg:items-end">
-        <app-section-head class="lg:col-span-7" eyebrow="Відгуки" headingId="reviews-title" title="Пацієнти, які *перестали* боятися" />
+      <div class="wrap grid grid-cols-1 gap-8 lg:grid-cols-12 lg:items-end">
+        <app-section-head class="lg:col-span-7" [eyebrow]="ui.reviews.eyebrow" headingId="reviews-title" [title]="ui.reviews.title" />
         <div class="lg:col-span-5 lg:justify-self-end" data-reveal appInView="150">
           <div class="glass inline-flex items-center gap-5 rounded-[1.75rem] px-6 py-5">
             <p class="font-display text-5xl font-semibold tracking-tight">{{ rating }}</p>
             <div>
-              <div class="flex text-[#f5a524]" role="img" [attr.aria-label]="'Рейтинг ' + rating + ' з 5'">
+              <div class="flex text-[#f5a524]" role="img" [attr.aria-label]="ui.reviews.rating(rating)">
                 @for (s of stars; track $index) { <app-icon name="star" [size]="18" /> }
               </div>
-              <p class="mt-1 text-sm text-slate">{{ count }} відгуків у Google</p>
+              <p class="mt-1 text-sm text-slate">{{ ui.reviews.count(count) }}</p>
             </div>
           </div>
         </div>
@@ -30,8 +30,8 @@ import { InView } from '../shared/directives/in-view';
       <div
         class="stage relative mt-12 md:mt-16"
         role="region"
-        aria-roledescription="карусель"
-        aria-label="Відгуки пацієнтів"
+        [attr.aria-roledescription]="ui.reviews.carousel"
+        [attr.aria-label]="ui.reviews.aria"
         tabindex="0"
         (keydown)="onKey($event)"
         (mouseenter)="paused.set(true)"
@@ -46,8 +46,8 @@ import { InView } from '../shared/directives/in-view';
             <div
               class="card"
               role="group"
-              aria-roledescription="слайд"
-              [attr.aria-label]="i + 1 + ' з ' + items.length"
+              [attr.aria-roledescription]="ui.reviews.slide"
+              [attr.aria-label]="ui.reviews.of(i + 1, items.length)"
               [attr.aria-hidden]="i !== current()"
               [style.transform]="cardTransform(i)"
               [class.front]="i === current()"
@@ -57,7 +57,7 @@ import { InView } from '../shared/directives/in-view';
               <div class="flex gap-0.5 text-[#f5a524]" aria-hidden="true">
                 @for (s of stars; track $index) { <app-icon name="star" [size]="15" /> }
               </div>
-              <blockquote class="mt-4 text-[1.02rem] leading-relaxed text-ink">«{{ r.text }}»</blockquote>
+              <blockquote class="mt-4 text-[1.02rem] leading-relaxed text-ink">{{ ui.q(r.text) }}</blockquote>
               <figcaption class="mt-6 flex items-center gap-3 border-t border-frost pt-5">
                 <img [ngSrc]="r.photo" [alt]="''" width="48" height="48" class="h-12 w-12 rounded-full object-cover" />
                 <div>
@@ -71,9 +71,9 @@ import { InView } from '../shared/directives/in-view';
       </div>
 
       <div class="wrap mt-10 flex items-center justify-center gap-4">
-        <button type="button" class="nav-btn" aria-label="Попередній відгук" (click)="go(-1)"><app-icon name="chevronLeft" /></button>
+        <button type="button" class="nav-btn" [attr.aria-label]="ui.reviews.prev" (click)="go(-1)"><app-icon name="chevronLeft" /></button>
         <p class="min-w-16 text-center font-display font-semibold" aria-live="polite">{{ current() + 1 }} / {{ items.length }}</p>
-        <button type="button" class="nav-btn" aria-label="Наступний відгук" (click)="go(1)"><app-icon name="chevronRight" /></button>
+        <button type="button" class="nav-btn" [attr.aria-label]="ui.reviews.next" (click)="go(1)"><app-icon name="chevronRight" /></button>
       </div>
     </section>
   `,
@@ -98,11 +98,13 @@ import { InView } from '../shared/directives/in-view';
   `,
 })
 export class Reviews {
-  protected readonly items = reviews;
-  protected readonly rating = clinic.rating.toString().replace('.', ',');
-  protected readonly count = clinic.reviewsCount;
+  private readonly i18n = inject(I18n);
+  protected readonly ui = this.i18n.t;
+  protected readonly items = this.i18n.c.reviews;
+  protected readonly rating = this.i18n.c.clinic.rating.toLocaleString(this.ui.locale);
+  protected readonly count = this.i18n.c.clinic.reviewsCount;
   protected readonly stars = [1, 2, 3, 4, 5];
-  protected readonly angle = 360 / reviews.length;
+  protected readonly angle = 360 / this.items.length;
 
   /** Позиція може виходити за межі масиву — так кільце обертається безперервно */
   private readonly pos = signal(0);

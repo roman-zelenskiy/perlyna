@@ -1,6 +1,7 @@
 import { DOCUMENT, Service, inject } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
-import { clinic, faq, reviews, services, siteUrl } from '../data/content';
+import { siteUrl } from '../data/content.uk';
+import { I18n } from './i18n';
 
 export type PageSeo = {
   title: string;
@@ -15,9 +16,14 @@ export class Seo {
   private readonly title = inject(Title);
   private readonly meta = inject(Meta);
   private readonly doc = inject(DOCUMENT);
+  private readonly i18n = inject(I18n);
 
   set(page: PageSeo): void {
-    const url = siteUrl + page.path;
+    const lang = this.i18n.lang();
+    const { clinic } = this.i18n.c;
+    const s = this.i18n.t.seo;
+    const at = (l: string) => `${siteUrl}/${l}${page.path === '/' ? '/' : page.path}`;
+    const url = at(lang);
     const image = `${siteUrl}/og-image.png`;
     this.title.setTitle(page.title);
 
@@ -25,15 +31,16 @@ export class Seo {
       { attr: 'name', key: 'description', content: page.description },
       { attr: 'name', key: 'robots', content: page.noindex ? 'noindex, follow' : 'index, follow, max-image-preview:large' },
       { attr: 'property', key: 'og:type', content: 'website' },
-      { attr: 'property', key: 'og:locale', content: 'uk_UA' },
-      { attr: 'property', key: 'og:site_name', content: `Стоматологія «${clinic.name}»` },
+      { attr: 'property', key: 'og:locale', content: s.ogLocale },
+      { attr: 'property', key: 'og:locale:alternate', content: s.ogAlt },
+      { attr: 'property', key: 'og:site_name', content: s.siteName(clinic.name) },
       { attr: 'property', key: 'og:title', content: page.title },
       { attr: 'property', key: 'og:description', content: page.description },
       { attr: 'property', key: 'og:url', content: url },
       { attr: 'property', key: 'og:image', content: image },
       { attr: 'property', key: 'og:image:width', content: '1200' },
       { attr: 'property', key: 'og:image:height', content: '630' },
-      { attr: 'property', key: 'og:image:alt', content: 'Стоматологія «Перлина» — лікування без болю в Києві' },
+      { attr: 'property', key: 'og:image:alt', content: s.imageAlt },
       { attr: 'name', key: 'twitter:card', content: 'summary_large_image' },
       { attr: 'name', key: 'twitter:title', content: page.title },
       { attr: 'name', key: 'twitter:description', content: page.description },
@@ -45,10 +52,18 @@ export class Seo {
     for (const t of tags) this.meta.updateTag({ [t.attr]: t.key, content: t.content }, `${t.attr}="${t.key}"`);
 
     this.link('canonical', url);
+    if (page.path !== '/404') {
+      this.link('alternate', at('uk'), 'uk');
+      this.link('alternate', at('en'), 'en');
+      this.link('alternate', at('uk'), 'x-default');
+    }
   }
 
   /** JSON-LD для головної: клініка, послуги з цінами, рейтинг, відгуки, FAQ */
   setHomeSchema(): void {
+    const { clinic, faq, reviews, services } = this.i18n.c;
+    const s = this.i18n.t.seo;
+    const home = `${siteUrl}/${this.i18n.lang()}/`;
     const id = `${siteUrl}/#clinic`;
     const schema = {
       '@context': 'https://schema.org',
@@ -56,21 +71,21 @@ export class Seo {
         {
           '@type': 'WebSite',
           '@id': `${siteUrl}/#website`,
-          url: `${siteUrl}/`,
-          name: `Стоматологія «${clinic.name}»`,
-          inLanguage: 'uk-UA',
+          url: home,
+          name: s.siteName(clinic.name),
+          inLanguage: s.inLanguage,
           publisher: { '@id': id },
         },
         {
           '@type': ['Dentist', 'MedicalClinic'],
           '@id': id,
           name: clinic.legalName,
-          url: `${siteUrl}/`,
+          url: home,
           logo: `${siteUrl}/favicon.svg`,
           image: `${siteUrl}/og-image.png`,
           telephone: clinic.phone,
           email: clinic.email,
-          priceRange: 'від 900 грн',
+          priceRange: s.priceRange,
           currenciesAccepted: 'UAH',
           medicalSpecialty: 'Dentistry',
           address: {
@@ -101,11 +116,11 @@ export class Seo {
           })),
           hasOfferCatalog: {
             '@type': 'OfferCatalog',
-            name: 'Стоматологічні послуги',
-            itemListElement: services.map((s) => ({
+            name: s.catalog,
+            itemListElement: services.map((sv) => ({
               '@type': 'Offer',
-              itemOffered: { '@type': 'MedicalProcedure', name: s.title, description: s.lead },
-              priceSpecification: { '@type': 'PriceSpecification', minPrice: s.price, priceCurrency: 'UAH' },
+              itemOffered: { '@type': 'MedicalProcedure', name: sv.title, description: sv.lead },
+              priceSpecification: { '@type': 'PriceSpecification', minPrice: sv.price, priceCurrency: 'UAH' },
             })),
           },
         },
@@ -119,11 +134,13 @@ export class Seo {
     this.jsonLd('schema-home', schema);
   }
 
-  private link(rel: string, href: string): void {
-    let el = this.doc.head.querySelector<HTMLLinkElement>(`link[rel="${rel}"]`);
+  private link(rel: string, href: string, hreflang?: string): void {
+    const sel = hreflang ? `link[rel="${rel}"][hreflang="${hreflang}"]` : `link[rel="${rel}"]`;
+    let el = this.doc.head.querySelector<HTMLLinkElement>(sel);
     if (!el) {
       el = this.doc.createElement('link');
       el.setAttribute('rel', rel);
+      if (hreflang) el.setAttribute('hreflang', hreflang);
       this.doc.head.appendChild(el);
     }
     el.setAttribute('href', href);

@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { clinic } from '../data/content';
+import { Component, inject } from '@angular/core';
+import { I18n } from '../core/i18n';
 import { BookingForm } from '../shared/ui/booking-form';
 import { GlowNumber } from '../shared/ui/glow-number';
 import { Icon } from '../shared/ui/icon';
@@ -19,8 +19,8 @@ import { InView } from '../shared/directives/in-view';
               <span class="-top-32 -left-32 h-96 w-96 bg-aqua/35"></span>
               <span class="right-0 -bottom-40 h-80 w-80 bg-glow/20"></span>
             </div>
-            <p class="pill !border-white/20 !bg-white/10 !text-glow"><span class="pill-dot breathe" aria-hidden="true"></span>Безкоштовно · 40 хвилин</p>
-            <h2 id="booking-section-title" class="title-lg mt-6 text-white" appWords="Запишіться на *безкоштовну* консультацію"></h2>
+            <p class="pill !border-white/20 !bg-white/10 !text-glow"><span class="pill-dot breathe" aria-hidden="true"></span>{{ ui.bookSec.pill }}</p>
+            <h2 id="booking-section-title" class="title-lg mt-6 text-white" [appWords]="ui.bookSec.title"></h2>
             <ol class="mt-10 grid gap-6">
               @for (s of steps; track s.title; let i = $index) {
                 <li class="flex gap-5" data-reveal [appInView]="i * 120">
@@ -46,10 +46,7 @@ import { InView } from '../shared/directives/in-view';
   `,
 })
 export class BookingSection {
-  protected readonly clinic = clinic;
-  protected readonly steps = [
-    { title: 'Огляд і 3D-сканування', text: 'Лікар оглядає зуби, робить 3D-скан і за потреби КТ — без болю та поспіху.' },
-    { title: 'План лікування', text: 'Пояснюємо варіанти на екрані й складаємо план з етапами та цінами.' },
-    { title: 'Фіксований кошторис', text: 'Отримуєте кошторис на руки. Сума не зміниться без вашої згоди.' },
-  ];
+  protected readonly clinic = inject(I18n).c.clinic;
+  protected readonly ui = inject(I18n).t;
+  protected readonly steps = this.ui.bookSec.steps;
 }

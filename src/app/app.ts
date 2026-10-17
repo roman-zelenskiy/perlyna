@@ -5,24 +5,31 @@ import { Footer } from './sections/footer';
 import { BookingDialog } from './sections/booking-dialog';
 import { MobileCta } from './sections/mobile-cta';
 import { SmoothScroll } from './core/smooth-scroll.service';
+import { I18n } from './core/i18n';
 
 @Component({
   selector: 'app-root',
   imports: [RouterOutlet, Header, Footer, BookingDialog, MobileCta],
   template: `
-    <a href="#main" class="sr-only z-[100] rounded-full bg-ink px-5 py-3 text-white focus:not-sr-only focus:fixed focus:top-3 focus:left-3">
-      Перейти до вмісту
-    </a>
-    <app-header />
-    <main id="main" tabindex="-1" class="outline-none">
+    @if (i18n.root()) {
       <router-outlet />
-    </main>
-    @defer (hydrate on viewport) { <app-footer /> }
-    <app-mobile-cta />
-    <app-booking-dialog />
+    } @else {
+      <a [href]="i18n.anchor('#main')" class="sr-only z-[100] rounded-full bg-ink px-5 py-3 text-white focus:not-sr-only focus:fixed focus:top-3 focus:left-3">
+        {{ i18n.t.skip }}
+      </a>
+      <app-header />
+      <main id="main" tabindex="-1" class="outline-none">
+        <router-outlet />
+      </main>
+      @defer (hydrate on viewport) { <app-footer /> }
+      <app-mobile-cta />
+      <app-booking-dialog />
+    }
   `,
 })
 export class App {
+  protected readonly i18n = inject(I18n);
+
   constructor() {
     const scroll = inject(SmoothScroll);
     const router = inject(Router);
@@ -41,7 +48,7 @@ export class App {
         if (!a || a.origin !== location.origin) return;
         const hash = a.hash;
         if (!hash || hash === '#') return;
-        const onHome = router.url.split('#')[0].split('?')[0] === '/';
+        const onHome = /^\/(uk|en)\/?$/.test(router.url.split('#')[0].split('?')[0]);
         const target = document.querySelector<HTMLElement>(hash);
         if (!onHome || !target) return;
         e.preventDefault();

@@ -1,7 +1,7 @@
 import { Component, DestroyRef, ElementRef, afterNextRender, inject, signal, viewChild } from '@angular/core';
+import { I18n } from '../../core/i18n';
 import { NgOptimizedImage } from '@angular/common';
 import { prefersReducedMotion } from '../../core/browser';
-import { heroStats } from '../../data/content';
 import { Booking } from '../../core/booking.service';
 import { Words } from '../../shared/directives/words';
 import { Ripple } from '../../shared/directives/ripple';
@@ -23,20 +23,19 @@ import { ToothScene } from './tooth-scene';
 
       <div class="wrap grid items-center gap-12 lg:grid-cols-12 lg:gap-8">
         <div class="relative z-10 lg:col-span-6">
-          <p class="pill"><span class="pill-dot breathe" aria-hidden="true"></span>Стоматологія в Києві · 12 років</p>
+          <p class="pill"><span class="pill-dot breathe" aria-hidden="true"></span>{{ ui.hero.pill }}</p>
 
-          <h1 id="hero-title" class="title-xl words-lcp mt-7" appWords="Стоматологія в Києві без *болю* та *страху*"></h1>
+          <h1 id="hero-title" class="title-xl words-lcp mt-7" [appWords]="ui.hero.title"></h1>
 
           <p class="mt-7 max-w-[34rem] text-lg leading-relaxed text-slate md:text-[1.2rem]">
-            Лікуємо під комп’ютерною анестезією, фіксуємо кошторис до початку лікування й даємо гарантію до
-            10 років. Перша консультація з 3D-скануванням — <strong class="font-semibold text-ink">безкоштовно</strong>.
+            {{ ui.hero.leadA }} <strong class="font-semibold text-ink">{{ ui.hero.leadFree }}</strong>.
           </p>
 
           <div class="mt-9 flex flex-wrap items-center gap-3">
-            <button type="button" class="btn btn-primary glint glint-auto" appRipple (click)="booking.show('Безкоштовна консультація')">
-              Записатися безкоштовно <app-icon name="arrow" [size]="18" />
+            <button type="button" class="btn btn-primary glint glint-auto" appRipple (click)="booking.show(consult)">
+              {{ ui.hero.cta }} <app-icon name="arrow" [size]="18" />
             </button>
-            <a href="#prices" class="btn btn-ghost" appRipple>Дивитися ціни</a>
+            <a [href]="i18n.anchor('#prices')" class="btn btn-ghost" appRipple>{{ ui.hero.prices }}</a>
           </div>
 
           <dl class="mt-12 grid max-w-xl grid-cols-3 gap-4 border-t border-frost pt-7">
@@ -55,7 +54,7 @@ import { ToothScene } from './tooth-scene';
           <div class="absolute top-0 right-0 aspect-[4/5] w-[60%] overflow-hidden rounded-[2.5rem] shadow-[var(--shadow-soft)]">
             <img
               ngSrc="1629909613654-28e377c37b09"
-              alt="Світлий кабінет клініки «Перлина» з бірюзовим стоматологічним кріслом"
+              [alt]="ui.hero.alt"
               fill
               sizes="(min-width: 1024px) 26vw, 60vw"
               class="object-cover"
@@ -76,15 +75,15 @@ import { ToothScene } from './tooth-scene';
           </div>
 
           <div class="glass chip absolute top-[10%] left-[2%] rounded-2xl px-4 py-3">
-            <p class="flex items-center gap-2 text-sm font-semibold"><app-icon name="sparkle" [size]="16" class="text-teal" />Без болю</p>
-            <p class="text-xs text-slate">комп’ютерна анестезія</p>
+            <p class="flex items-center gap-2 text-sm font-semibold"><app-icon name="sparkle" [size]="16" class="text-teal" />{{ ui.hero.c1 }}</p>
+            <p class="text-xs text-slate">{{ ui.hero.c1s }}</p>
           </div>
           <div class="glass chip absolute right-[0%] bottom-[30%] rounded-2xl px-4 py-3 [animation-delay:-2s]">
-            <p class="flex items-center gap-2 text-sm font-semibold"><app-icon name="wallet" [size]="16" class="text-teal" />Кошторис фіксуємо</p>
-            <p class="text-xs text-slate">письмово, до початку лікування</p>
+            <p class="flex items-center gap-2 text-sm font-semibold"><app-icon name="wallet" [size]="16" class="text-teal" />{{ ui.hero.c2 }}</p>
+            <p class="text-xs text-slate">{{ ui.hero.c2s }}</p>
           </div>
           <div class="glass chip absolute right-[8%] bottom-[4%] rounded-2xl px-4 py-3 [animation-delay:-4s]">
-            <p class="flex items-center gap-2 text-sm font-semibold"><app-icon name="shield" [size]="16" class="text-teal" />Гарантія до 10 років</p>
+            <p class="flex items-center gap-2 text-sm font-semibold"><app-icon name="shield" [size]="16" class="text-teal" />{{ ui.hero.c3 }}</p>
           </div>
         </div>
       </div>
@@ -115,7 +114,10 @@ import { ToothScene } from './tooth-scene';
 })
 export class Hero {
   protected readonly booking = inject(Booking);
-  protected readonly stats = heroStats;
+  protected readonly i18n = inject(I18n);
+  protected readonly ui = this.i18n.t;
+  protected readonly stats = this.i18n.c.heroStats;
+  protected readonly consult = this.i18n.c.bookingServices[0];
   protected readonly sceneReady = signal(false);
   /** 3D вантажимо не одразу: десктоп — у простої після load, мобільні — коли сцена з’явиться на екрані */
   protected readonly loadScene = signal(false);

@@ -1,11 +1,12 @@
 import { Component, afterNextRender, inject, input, signal } from '@angular/core';
 import { FormField, form, minLength, pattern, required, submit, validate } from '@angular/forms/signals';
 import { RouterLink } from '@angular/router';
-import { bookingServices, timeSlots } from '../../data/content';
+import { I18n } from '../../core/i18n';
 import { Booking } from '../../core/booking.service';
 import { formatPhone, isValidPhone } from '../../core/phone';
 import { Ripple } from '../directives/ripple';
 import { Icon } from './icon';
+import { Select } from './select';
 
 type Model = { name: string; phone: string; service: string; date: string; time: string };
 
@@ -14,30 +15,30 @@ let uid = 0;
 /** Форма запису (Signal Forms). Використовується в секції та в модальному вікні. */
 @Component({
   selector: 'app-booking-form',
-  imports: [FormField, RouterLink, Ripple, Icon],
+  imports: [FormField, RouterLink, Ripple, Icon, Select],
   template: `
     @if (done()) {
       <div class="py-8 text-center" role="status" aria-live="polite">
         <div class="success-mark mx-auto grid h-20 w-20 place-items-center rounded-full bg-aqua/12 text-teal">
           <app-icon name="check" [size]="40" />
         </div>
-        <p class="title-md mt-6">Дякуємо, {{ firstName() }}!</p>
+        <p class="title-md mt-6">{{ ui.form.thanks(firstName()) }}</p>
         <p class="mx-auto mt-3 max-w-sm text-slate">
-          Адміністратор передзвонить протягом 15 хвилин у робочий час, щоб підтвердити запис на {{ model().date ? formatDate(model().date) : 'зручний день' }}.
+          {{ ui.form.callback(model().date ? formatDate(model().date) : ui.form.anyDay) }}
         </p>
-        <button type="button" class="mt-6 text-sm font-semibold text-teal underline underline-offset-4" (click)="reset()">Записати ще когось</button>
+        <button type="button" class="mt-6 text-sm font-semibold text-teal underline underline-offset-4" (click)="reset()">{{ ui.form.again }}</button>
       </div>
     } @else {
       <form novalidate (submit)="onSubmit($event)" class="grid gap-5" [attr.aria-busy]="sending()">
         <div class="field">
-          <label [for]="id + '-name'">Ваше ім’я</label>
-          <input [id]="id + '-name'" [formField]="f.name" autocomplete="given-name" placeholder="Олена"
+          <label [for]="id + '-name'">{{ ui.form.name }}</label>
+          <input [id]="id + '-name'" [formField]="f.name" autocomplete="given-name" [placeholder]="ui.form.namePh"
             [attr.aria-invalid]="show('name')" [attr.aria-describedby]="show('name') ? id + '-name-err' : null" />
           @if (show('name')) { <p class="err" [id]="id + '-name-err'">{{ error('name') }}</p> }
         </div>
 
         <div class="field">
-          <label [for]="id + '-phone'">Телефон</label>
+          <label [for]="id + '-phone'">{{ ui.form.phone }}</label>
           <input [id]="id + '-phone'" type="tel" inputmode="tel" autocomplete="tel" placeholder="+380 (__) ___-__-__"
             [value]="f.phone().value()" (input)="onPhone($event)" (focus)="onPhoneFocus()" (blur)="onPhoneBlur()"
             [attr.aria-invalid]="show('phone')" [attr.aria-describedby]="show('phone') ? id + '-phone-err' : null" />
@@ -45,24 +46,19 @@ let uid = 0;
         </div>
 
         <div class="field">
-          <label [for]="id + '-service'">Послуга</label>
-          <div class="relative">
-            <select [id]="id + '-service'" [formField]="f.service">
-              @for (s of services; track s) { <option [value]="s">{{ s }}</option> }
-            </select>
-            <app-icon name="chevronRight" [size]="18" class="pointer-events-none absolute top-1/2 right-4 -translate-y-1/2 rotate-90 text-slate" />
-          </div>
+          <label [for]="id + '-service'">{{ ui.form.service }}</label>
+          <app-select [inputId]="id + '-service'" [options]="services" [value]="model().service" (valueChange)="f.service().value.set($event)" />
         </div>
 
         <div class="grid gap-5 sm:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
           <div class="field">
-            <label [for]="id + '-date'">Бажана дата</label>
+            <label [for]="id + '-date'">{{ ui.form.date }}</label>
             <input [id]="id + '-date'" type="date" [formField]="f.date" [min]="minDate()"
               [attr.aria-invalid]="show('date')" [attr.aria-describedby]="show('date') ? id + '-date-err' : null" />
             @if (show('date')) { <p class="err" [id]="id + '-date-err'">{{ error('date') }}</p> }
           </div>
           <fieldset class="field">
-            <legend>Зручний час</legend>
+            <legend>{{ ui.form.time }}</legend>
             <div class="grid grid-cols-2 gap-2">
               @for (t of slots; track t) {
                 <label class="slot" [class.on]="model().time === t">
@@ -75,18 +71,18 @@ let uid = 0;
         </div>
 
         @if (offline()) {
-          <p class="err rounded-xl bg-red-50 px-4 py-3" role="alert">Немає з’єднання з інтернетом. Перевірте мережу й спробуйте ще раз або зателефонуйте нам.</p>
+          <p class="err rounded-xl bg-red-50 px-4 py-3" role="alert">{{ ui.form.offline }}</p>
         }
 
         <button type="submit" class="btn btn-primary glint mt-1 w-full" appRipple [disabled]="sending()">
           @if (sending()) {
-            <span class="h-4 w-4 animate-spin rounded-full border-2 border-white border-r-transparent" aria-hidden="true"></span> Надсилаємо…
+            <span class="h-4 w-4 animate-spin rounded-full border-2 border-white border-r-transparent" aria-hidden="true"></span> {{ ui.form.sending }}
           } @else {
-            Записатися на консультацію <app-icon name="arrow" [size]="18" />
+            {{ ui.form.submit }} <app-icon name="arrow" [size]="18" />
           }
         </button>
         <p class="text-center text-xs leading-relaxed text-slate">
-          Натискаючи кнопку, ви погоджуєтеся з <a routerLink="/polityka-konfidentsiinosti" class="underline underline-offset-2">політикою конфіденційності</a>
+          {{ ui.form.consent }} <a [routerLink]="i18n.link('/polityka-konfidentsiinosti')" class="underline underline-offset-2">{{ ui.form.policy }}</a>
         </p>
       </form>
     }
@@ -95,12 +91,12 @@ let uid = 0;
     .field { display: grid; gap: 0.45rem; min-width: 0; }
     .field label:not(.slot), .field legend { font-size: 0.875rem; font-weight: 600; color: var(--color-ink); margin-bottom: 0.45rem; }
     .field legend { margin-bottom: 0.9rem; }
-    input:not([type='radio']), select {
+    input:not([type='radio']) {
       width: 100%; min-height: 3.25rem; padding: 0 1.1rem; border-radius: 1rem; appearance: none;
       background: #fff; border: 1px solid var(--color-frost); color: var(--color-ink); font: inherit;
       transition: border-color .3s, box-shadow .3s;
     }
-    input:focus, select:focus { outline: none; border-color: var(--color-aqua); box-shadow: 0 0 0 4px rgb(20 184 166 / 0.15); }
+    input:focus { outline: none; border-color: var(--color-aqua); box-shadow: 0 0 0 4px rgb(20 184 166 / 0.15); }
     input[aria-invalid='true'] { border-color: #c2410c; }
     input::placeholder { color: rgb(71 90 112 / 0.6); }
     .err { font-size: 0.85rem; color: #b42318; }
@@ -119,20 +115,23 @@ export class BookingForm {
   readonly presetService = input<string | null>(null);
 
   protected readonly id = `bf${++uid}`;
-  protected readonly services = bookingServices;
-  protected readonly slots = timeSlots;
+  protected readonly i18n = inject(I18n);
+  protected readonly ui = this.i18n.t;
+  protected readonly services = this.i18n.c.bookingServices;
+  protected readonly slots = this.i18n.c.timeSlots;
   private readonly booking = inject(Booking);
 
-  protected readonly model = signal<Model>({ name: '', phone: '', service: bookingServices[0], date: '', time: '' });
+  protected readonly model = signal<Model>({ name: '', phone: '', service: this.services[0], date: '', time: '' });
   protected readonly f = form(this.model, (p) => {
-    required(p.name, { message: 'Як до вас звертатися?' });
-    minLength(p.name, 2, { message: 'Мінімум 2 літери' });
-    pattern(p.name, /^[\p{L}\s'’-]+$/u, { message: 'Лише літери, будь ласка' });
-    required(p.phone, { message: 'Вкажіть номер, щоб ми могли передзвонити' });
-    validate(p.phone, ({ value }) => (value() && !isValidPhone(value()) ? { kind: 'phone', message: 'Номер неповний: +380 (XX) XXX-XX-XX' } : undefined));
-    required(p.date, { message: 'Оберіть дату' });
-    validate(p.date, ({ value }) => (value() && value() < this.minDate() ? { kind: 'past', message: 'Дата вже минула' } : undefined));
-    required(p.time, { message: 'Оберіть зручний час' });
+    const e = this.ui.form.err;
+    required(p.name, { message: e.name });
+    minLength(p.name, 2, { message: e.min });
+    pattern(p.name, /^[\p{L}\s'’-]+$/u, { message: e.letters });
+    required(p.phone, { message: e.phone });
+    validate(p.phone, ({ value }) => (value() && !isValidPhone(value()) ? { kind: 'phone', message: e.phoneShort } : undefined));
+    required(p.date, { message: e.date });
+    validate(p.date, ({ value }) => (value() && value() < this.minDate() ? { kind: 'past', message: e.past } : undefined));
+    required(p.time, { message: e.time });
   });
 
   protected readonly attempted = signal(false);
@@ -146,7 +145,7 @@ export class BookingForm {
       const d = new Date();
       this.minDate.set(new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 10));
       const preset = this.presetService();
-      if (preset && bookingServices.includes(preset)) this.model.update((m) => ({ ...m, service: preset }));
+      if (preset && this.services.includes(preset)) this.model.update((m) => ({ ...m, service: preset }));
     });
   }
 
@@ -207,11 +206,11 @@ export class BookingForm {
 
   protected formatDate(iso: string): string {
     const [y, m, d] = iso.split('-').map(Number);
-    return new Date(y, m - 1, d).toLocaleDateString('uk-UA', { day: 'numeric', month: 'long' });
+    return new Date(y, m - 1, d).toLocaleDateString(this.ui.locale, { day: 'numeric', month: 'long' });
   }
 
   protected reset(): void {
-    this.model.set({ name: '', phone: '', service: bookingServices[0], date: '', time: '' });
+    this.model.set({ name: '', phone: '', service: this.services[0], date: '', time: '' });
     this.f().reset();
     this.attempted.set(false);
     this.done.set(false);

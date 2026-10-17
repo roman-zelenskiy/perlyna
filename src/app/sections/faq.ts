@@ -1,5 +1,5 @@
-import { Component, signal } from '@angular/core';
-import { faq } from '../data/content';
+import { Component, inject, signal } from '@angular/core';
+import { I18n } from '../core/i18n';
 import { SectionHead } from '../shared/ui/section-head';
 import { Icon } from '../shared/ui/icon';
 import { InView } from '../shared/directives/in-view';
@@ -12,7 +12,7 @@ import { Glow } from '../shared/directives/glow';
   template: `
     <section id="faq" aria-labelledby="faq-title" class="relative py-24 md:py-36">
       <div class="wrap max-w-4xl">
-        <app-section-head class="block text-center [&_.pill]:mx-auto [&_p]:mx-auto" eyebrow="Питання" headingId="faq-title" title="Відповідаємо *чесно*" />
+        <app-section-head class="block text-center [&_.pill]:mx-auto [&_p]:mx-auto" [eyebrow]="ui.faq.eyebrow" headingId="faq-title" [title]="ui.faq.title" />
 
         <ul class="mt-14 grid gap-3">
           @for (item of items; track item.q; let i = $index) {
@@ -54,7 +54,8 @@ import { Glow } from '../shared/directives/glow';
   `,
 })
 export class Faq {
-  protected readonly items = faq;
+  protected readonly ui = inject(I18n).t;
+  protected readonly items = inject(I18n).c.faq;
   protected readonly open = signal<number | null>(0);
 
   protected toggle(i: number): void {

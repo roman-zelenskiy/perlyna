@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
+import { I18n } from '../core/i18n';
 import { NgOptimizedImage } from '@angular/common';
-import { doctors } from '../data/content';
 import { SectionHead } from '../shared/ui/section-head';
 import { Icon } from '../shared/ui/icon';
 import { InView } from '../shared/directives/in-view';
@@ -18,16 +18,16 @@ import { Booking } from '../core/booking.service';
         <div class="grid gap-8 lg:grid-cols-12 lg:items-end">
           <app-section-head
             class="lg:col-span-7"
-            eyebrow="Лікарі"
+            [eyebrow]="ui.doctors.eyebrow"
             headingId="doctors-title"
-            title="Люди, яким *довіряють* найцінніше"
+            [title]="ui.doctors.title"
           />
           <p class="text-lg text-slate lg:col-span-5" data-reveal appInView="150">
-            Кожен лікар щороку проходить навчання в Україні та Європі. Середній досвід команди — 11 років, а стоматолог без болю для нас — не гасло, а стандарт.
+            {{ ui.doctors.lead }}
           </p>
         </div>
 
-        <ul class="team mt-14 grid gap-5 sm:grid-cols-2 lg:mt-20 lg:grid-cols-12 lg:gap-6">
+        <ul class="team mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:mt-20 lg:grid-cols-12 lg:gap-6">
           @for (d of items; track d.name; let i = $index) {
             <li class="doc" [class]="'doc-' + i">
               <article
@@ -53,7 +53,7 @@ import { Booking } from '../core/booking.service';
                       [class.rotate-45]="open() === i"
                       [attr.aria-expanded]="open() === i"
                       [attr.aria-controls]="'doc-details-' + i"
-                      [attr.aria-label]="'Детальніше про лікаря: ' + d.name"
+                      [attr.aria-label]="ui.doctors.more(d.name)"
                       (click)="toggle(i)"
                     >
                       <app-icon name="plus" [size]="18" />
@@ -61,7 +61,7 @@ import { Booking } from '../core/booking.service';
                   </div>
                   <div class="details" [id]="'doc-details-' + i" [attr.aria-hidden]="open() !== i">
                     <div>
-                    <p class="mt-4 inline-flex rounded-full bg-glow px-3 py-1 text-xs font-semibold text-ink">Досвід {{ d.years }} років</p>
+                    <p class="mt-4 inline-flex rounded-full bg-glow px-3 py-1 text-xs font-semibold text-ink">{{ ui.doctors.exp(d.years) }}</p>
                     <ul class="mt-3 grid gap-1.5 text-sm text-white/90">
                       @for (x of d.details; track x) { <li class="flex gap-2"><app-icon name="check" [size]="16" class="mt-0.5 text-glow" />{{ x }}</li> }
                     </ul>
@@ -73,9 +73,9 @@ import { Booking } from '../core/booking.service';
           }
           <li class="doc doc-note">
             <div class="flex h-full flex-col justify-between gap-6 rounded-[2rem] bg-mist p-7 md:p-9">
-              <p class="text-slate">Середній досвід команди</p>
-              <p><app-glow-number class="text-6xl" [value]="11" [appInView]="0" /> <span class="font-display text-2xl font-semibold">років</span></p>
-              <button type="button" class="btn btn-primary glint self-start" appRipple (click)="booking.show('Безкоштовна консультація')">Обрати лікаря на консультації</button>
+              <p class="text-slate">{{ ui.doctors.avg }}</p>
+              <p><app-glow-number class="text-6xl" [value]="11" [appInView]="0" /> <span class="ml-2 font-display text-2xl font-semibold">{{ ui.doctors.years }}</span></p>
+              <button type="button" class="btn btn-primary glint max-w-full self-start text-center whitespace-normal" appRipple (click)="booking.show(consult)">{{ ui.doctors.cta }}</button>
             </div>
           </li>
         </ul>
@@ -112,7 +112,9 @@ import { Booking } from '../core/booking.service';
   `,
 })
 export class Doctors {
-  protected readonly items = doctors;
+  protected readonly ui = inject(I18n).t;
+  protected readonly items = inject(I18n).c.doctors;
+  protected readonly consult = inject(I18n).c.bookingServices[0];
   protected readonly open = signal<number | null>(null);
   protected readonly booking = inject(Booking);
 
